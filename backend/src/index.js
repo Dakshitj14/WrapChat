@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 5001;
 
 // Routes
 app.use('/api/auth', authroute);
-app,use('/api/messages', messageroute);
+app.use('/api/messages', messageroute);
 
 // Start server
 app.listen(PORT, () => {
