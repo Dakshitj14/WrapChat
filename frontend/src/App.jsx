@@ -7,6 +7,7 @@ import SignupPage from './pages/SignupPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 
 const App = () => {
+  const{authUser}=useAuthStore();
   return (
 
     <div>
