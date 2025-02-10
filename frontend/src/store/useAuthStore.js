@@ -11,6 +11,8 @@ export const useAuthStore = create((set) => ({
   isUpdatingProfile: false,
 
   isCheckingAuth: true,
+
+  // Check if user is authenticated
   checkAuth: async () => {
 
     try{
@@ -25,7 +27,7 @@ export const useAuthStore = create((set) => ({
     }
   },
 
-
+  // Signup
   signup: async (data) => {
     try {
         const res = await axiosInstance.post("/auth/signup", data);
@@ -40,6 +42,7 @@ export const useAuthStore = create((set) => ({
 
   },
 
+  // Login
   login: async (data) => {
     set({ isLoggingIn: true });
     try {
@@ -55,6 +58,7 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  // Logout
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
