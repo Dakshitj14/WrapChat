@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './lib/db.js';
 import authroute from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import messageroute from './routes/message.route.js';
 
 // Load environment variables
@@ -22,6 +23,12 @@ const PORT = process.env.PORT || 5001;
 // Routes
 app.use('/api/auth', authroute);
 app.use('/api/messages', messageroute);
+
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+    })
+);
 
 // Start server
 app.listen(PORT, () => {
