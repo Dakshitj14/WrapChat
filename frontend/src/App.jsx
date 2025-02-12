@@ -8,27 +8,24 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/useAuthStore.js';
-import {Loader} from "lucide-react"
+import { Loader } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
 
 const App = () => {
-  const{authUser, checkAuth, isCheckingAuth}=useAuthStore();
-  useEffect(()=>{
+  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+
+  useEffect(() => {
     checkAuth();
-  },[checkAuth]);
+  }, [checkAuth]);
+
+  if(isCheckingAuth && !authUser  ) return (
+    <div className="flex items-center justify-center h-screen"> 
+      <Loader className='size-10 animate-spin' />    
+    </div>
+  );
 
   console.log(authUser);
-
-  if(isCheckingAuth && !authUser){
-    return(
-      <div className="flex items-center justify-center h-screen">
-        <Loader className="animate-spin size-10 text-white" />
-      </div>
-    )
-
-  }
-
   return (
 
     <div>
@@ -42,7 +39,7 @@ const App = () => {
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
 
-    <Toaster/>
+      <Toaster/>
     </div>
   );
 };
