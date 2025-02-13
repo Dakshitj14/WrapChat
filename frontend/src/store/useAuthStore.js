@@ -2,7 +2,6 @@ import { create } from "zustand";
 
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
-import { LogOut } from "lucide-react";   
 
 export const useAuthStore = create((set) => ({
   authUser: null,
@@ -13,6 +12,7 @@ export const useAuthStore = create((set) => ({
   isCheckingAuth: true,
 
   // Check if user is authenticated
+
   checkAuth: async () => {
 
     try{
@@ -57,7 +57,7 @@ export const useAuthStore = create((set) => ({
       set({ isLoggingIn: false });
     }
   },
-
+  
   // Logout
   logout: async () => {
     try {

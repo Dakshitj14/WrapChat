@@ -102,7 +102,8 @@ const LoginPage = () => {
               )}
             </button>
           </form>
-  
+              
+              
           <div className="text-center">
             <p className="text-base-content/60">
               Don&apos;t have an account?{" "}
