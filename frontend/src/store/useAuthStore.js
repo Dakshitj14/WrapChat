@@ -16,7 +16,7 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
     } catch (error) {
       set({ authUser: null });
-      console.log("Error in checkAuth:", error);
+      console.error("Error in checkAuth:", error);
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -30,7 +30,8 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Account created successfully");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Signup failed");
+      console.error("Signup error:", error);
+      toast.error(error.response?.data?.message || "Signup failed. Try again.");
     } finally {
       set({ isSigningUp: false });
     }
@@ -45,7 +46,8 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Logged in successfully");
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      console.error("Login error:", error);
+      toast.error(error.response?.data?.message || "Login failed. Try again.");
     } finally {
       set({ isLoggingIn: false });
     }
@@ -59,24 +61,33 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Logout failed");
+      console.error("Logout error:", error);
+      toast.error(error.response?.data?.message || "Logout failed. Try again.");
     }
   },
 
   // Update profile
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
+
     try {
-      const res = await axiosInstance.put("/auth/update-profile", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      set({ authUser: res.data });
-      toast.success("Profile updated successfully");
+        const res = await axiosInstance.put("/auth/update-profile", data, {
+            headers: data instanceof FormData ? { "Content-Type": "multipart/form-data" } : {},
+        });
+
+        console.log("Updated user response:", res.data); // Debugging log
+
+        set((state) => ({
+            authUser: { ...state.authUser, profilePic: res.data.profilePic }, // ✅ Fix field mismatch
+        }));
+
+        toast.success("Profile updated successfully");
     } catch (error) {
-      console.log("Error in updateProfile:", error);
-      toast.error(error.response?.data?.message || "Failed to update profile");
+        console.error("Error in updateProfile:", error);
+        toast.error(error.response?.data?.message || "Failed to update profile. Try again.");
     } finally {
-      set({ isUpdatingProfile: false });
+        set({ isUpdatingProfile: false });
     }
-  },
+},
+
 }));

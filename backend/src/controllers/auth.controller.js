@@ -3,40 +3,38 @@ import User from '../models/user.models.js';
 import bcrypt from 'bcryptjs';
 import multer from "multer";
 import dotenv from 'dotenv';
-import { v2 as cloudinary } from "cloudinary"; //
-// 
-//  ✅ FIX: Import Cloudinary
-
-// Multer configuration for handling file uploads
-const storage = multer.memoryStorage();
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+import { v2 as cloudinary } from "cloudinary";
 
 dotenv.config();
-// Cloudinary configuration
+
+// ✅ Cloudinary Configuration
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ Fix: Export `upload` to use in routes
+// ✅ Multer Configuration (for Memory Storage)
+const storage = multer.memoryStorage();
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+
 export { upload };
 
-// Signup
+// ✅ Signup
 export const signup = async (req, res) => {
     const { fullName, email, password } = req.body;
 
     try {
         if (!fullName || !email || !password) {
-            return res.status(400).send("Please provide all the required fields");
+            return res.status(400).json({ message: "Please provide all required fields" });
         }
         if (password.length < 8) {
-            return res.status(400).send("Password should be at least 8 characters long");
+            return res.status(400).json({ message: "Password must be at least 8 characters long" });
         }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).send("Email already exists");
+            return res.status(400).json({ message: "Email already exists" });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -45,14 +43,13 @@ export const signup = async (req, res) => {
         const newUser = new User({ fullName, email, password: hashedPassword });
 
         await newUser.save();
-
         generateToken(newUser._id, res);
 
         return res.status(201).json({
             _id: newUser._id,
             fullName: newUser.fullName,
             email: newUser.email,
-            profileImage: newUser.profileImage,
+            profilePic: newUser.profilePic || "", // Ensure profilePic field is handled
         });
 
     } catch (error) {
@@ -63,7 +60,7 @@ export const signup = async (req, res) => {
     }
 };
 
-// Login
+// ✅ Login
 export const login = async (req, res) => {
     const { email, password } = req.body;
 
@@ -85,7 +82,7 @@ export const login = async (req, res) => {
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
-            profileImage: user.profileImage,
+            profilePic: user.profilePic || "",
         });
 
     } catch (error) {
@@ -96,7 +93,7 @@ export const login = async (req, res) => {
     }
 };
 
-// Logout
+// ✅ Logout
 export const logout = (req, res) => {
     try {
         res.cookie("jwt", "", { maxAge: 0 });
@@ -109,47 +106,65 @@ export const logout = (req, res) => {
     }
 };
 
-// Update profile
-
+// ✅ Update Profile
 export const updateProfile = async (req, res) => {
-  try {
-    const userId = req.user.id; // Get user ID from token
+    try {
+        const userId = req.user?.id; // Ensure authentication middleware sets `req.user`
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
-    // Check if a file was uploaded
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+        // Check if a file was uploaded
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        // ✅ Upload image buffer to Cloudinary
+        const uploadPromise = new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                { folder: "profile_pics" },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
+            uploadStream.end(req.file.buffer);
+        });
+
+        const uploadResult = await uploadPromise;
+        if (!uploadResult.secure_url) {
+            return res.status(500).json({ message: "Image upload failed" });
+        }
+
+        const profilePicUrl = uploadResult.secure_url;
+
+        // ✅ Update user profile in the database
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { profilePic: profilePicUrl }, // Ensure correct field name
+            { new: true }
+        );
+
+        res.json({ 
+            _id: updatedUser._id,
+            fullName: updatedUser.fullName,
+            email: updatedUser.email,
+            profilePic: updatedUser.profilePic, // Ensure frontend gets the correct field
+            createdAt: updatedUser.createdAt 
+        });
+    } catch (error) {
+        console.error("Error in updateProfile controller:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
-
-    // Upload image to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: "profile_pics",
-    });
-
-    // Get Cloudinary image URL
-    const profilePicUrl = uploadResult.secure_url;
-
-    // Update user profile in the database
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { profilePic: profilePicUrl }, // Save new image URL
-      { new: true }
-    );
-
-    res.json(updatedUser);
-  } catch (error) {
-    console.error("Error in updateProfile controller:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
 };
 
 
-
-// Check Auth
+// ✅ Check Auth
 export const checkAuth = (req, res) => {
     try {
         res.status(200).json(req.user);
     } catch (error) {
-        console.log("Error in checkAuth controller", error);
+        console.error("Error in checkAuth controller", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };

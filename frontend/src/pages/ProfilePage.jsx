@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Camera, Mail, User } from "lucide-react";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
-  const [selectedImg, setSelectedImg] = useState(null);
+  const [selectedImg, setSelectedImg] = useState(authUser?.profilePic || "/avatar.png");
+
+  // ✅ Ensure image updates when authUser changes
+  useEffect(() => {
+    setSelectedImg(authUser?.profilePic || "/avatar.png");
+  }, [authUser]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -13,8 +18,13 @@ const ProfilePage = () => {
     const formData = new FormData();
     formData.append("profilePic", file);
 
-    setSelectedImg(URL.createObjectURL(file));
-    await updateProfile(formData);
+    setSelectedImg(URL.createObjectURL(file)); // Temporarily show new image
+
+    try {
+      await updateProfile(formData); // ✅ Backend updates state, no need to manually fetch user
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+    }
   };
 
   return (
@@ -30,7 +40,7 @@ const ProfilePage = () => {
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img
-                src={selectedImg || authUser?.profilePic || "/avatar.png"}
+                src={selectedImg}
                 alt="Profile"
                 className="size-32 rounded-full object-cover border-4"
               />
@@ -89,6 +99,7 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
