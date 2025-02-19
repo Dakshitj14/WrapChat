@@ -128,6 +128,7 @@ export const updateProfile = async (req, res) => {
                     else resolve(result);
                 }
             );
+            // console.log("stream:",uploadStream);
             uploadStream.end(req.file.buffer);
         });
 
@@ -137,6 +138,8 @@ export const updateProfile = async (req, res) => {
         }
 
         const profilePicUrl = uploadResult.secure_url;
+
+        // console.log("profilePicUrl:",profilePicUrl);
 
         // ✅ Update user profile in the database
         const updatedUser = await User.findByIdAndUpdate(
