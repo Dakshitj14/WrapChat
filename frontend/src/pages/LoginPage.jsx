@@ -3,7 +3,6 @@ import { useAuthStore } from "../store/useAuthStore";
 import AuthImagePattern from "../components/AuthImagePattern";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
-import GitHubOAuth from "../auth/oauth";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,13 +19,7 @@ const LoginPage = () => {
 
   return (
     <div className="h-screen grid lg:grid-cols-2">
-      {/* left side */}
-      <AuthImagePattern
-        title={"Welcome back!"}
-        subtitle={"Sign in to continue your conversations and catch up with your messages."}
-      />
-  
-      {/* right side */}
+      {/* Left Side - Form */}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
@@ -34,7 +27,7 @@ const LoginPage = () => {
             <div className="flex flex-col items-center gap-2 group">
               <div
                 className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20
-                transition-colors"
+              transition-colors"
               >
                 <MessageSquare className="w-6 h-6 text-primary" />
               </div>
@@ -42,7 +35,7 @@ const LoginPage = () => {
               <p className="text-base-content/60">Sign in to your account</p>
             </div>
           </div>
-  
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="form-control">
@@ -62,7 +55,7 @@ const LoginPage = () => {
                 />
               </div>
             </div>
-  
+
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Password</span>
@@ -92,8 +85,6 @@ const LoginPage = () => {
               </div>
             </div>
 
-            {/* <GitHubOAuth /> */} 
-  
             <button type="submit" className="btn btn-primary w-full" disabled={isLoggingIn}>
               {isLoggingIn ? (
                 <>
@@ -105,8 +96,7 @@ const LoginPage = () => {
               )}
             </button>
           </form>
-              
-              
+
           <div className="text-center">
             <p className="text-base-content/60">
               Don&apos;t have an account?{" "}
@@ -117,8 +107,13 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Right Side - Image/Pattern */}
+      <AuthImagePattern
+        title={"Welcome back!"}
+        subtitle={"Sign in to continue your conversations and catch up with your messages."}
+      />
     </div>
   );
-  
 };
 export default LoginPage;

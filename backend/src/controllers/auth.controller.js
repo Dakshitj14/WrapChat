@@ -1,173 +1,118 @@
-import { generateToken } from '../lib/utils.js';
-import User from '../models/user.models.js';
-import bcrypt from 'bcryptjs';
-import multer from "multer";
-import dotenv from 'dotenv';
-import { v2 as cloudinary } from "cloudinary";
+import { generateToken } from "../lib/utils.js";
+import User from "../models/user.model.js";
+import bcrypt from "bcryptjs";
+import cloudinary from "../lib/cloudinary.js";
 
-dotenv.config();
-
-// ✅ Cloudinary Configuration
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// ✅ Multer Configuration (for Memory Storage)
-const storage = multer.memoryStorage();
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
-
-export { upload };
-
-// ✅ Signup
 export const signup = async (req, res) => {
-    const { fullName, email, password } = req.body;
-
-    try {
-        if (!fullName || !email || !password) {
-            return res.status(400).json({ message: "Please provide all required fields" });
-        }
-        if (password.length < 8) {
-            return res.status(400).json({ message: "Password must be at least 8 characters long" });
-        }
-
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email already exists" });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = new User({ fullName, email, password: hashedPassword });
-
-        await newUser.save();
-        generateToken(newUser._id, res);
-
-        return res.status(201).json({
-            _id: newUser._id,
-            fullName: newUser.fullName,
-            email: newUser.email,
-            profilePic: newUser.profilePic || "", // Ensure profilePic field is handled
-        });
-
-    } catch (error) {
-        console.error("Error in signup controller", error);
-        if (!res.headersSent) {
-            return res.status(500).json({ message: "Internal server error" });
-        }
+  const { fullName, email, password } = req.body;
+  try {
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
     }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (user) return res.status(400).json({ message: "Email already exists" });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({
+      fullName,
+      email,
+      password: hashedPassword,
+    });
+
+    if (newUser) {
+      // generate jwt token here
+      generateToken(newUser._id, res);
+      await newUser.save();
+
+      res.status(201).json({
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        profilePic: newUser.profilePic,
+      });
+    } else {
+      res.status(400).json({ message: "Invalid user data" });
+    }
+  } catch (error) {
+    console.log("Error in signup controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
-// ✅ Login
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
 
-    try {
-        const user = await User.findOne({ email });
-
-        if (!user || !password || !user.password) {
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
-
-        const isPasswordCorrect = await bcrypt.compare(password, user.password);
-        if (!isPasswordCorrect) {
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
-
-        generateToken(user._id, res);
-
-        return res.status(200).json({
-            _id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-            profilePic: user.profilePic || "",
-        });
-
-    } catch (error) {
-        console.error("Error in login controller", error);
-        if (!res.headersSent) {
-            return res.status(500).json({ message: "Internal server error" });
-        }
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
     }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    generateToken(user._id, res);
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.log("Error in login controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
-// ✅ Logout
 export const logout = (req, res) => {
-    try {
-        res.cookie("jwt", "", { maxAge: 0 });
-        return res.status(200).json({ message: "Logged out successfully" });
-    } catch (error) {
-        console.error("Error in logout controller", error);
-        if (!res.headersSent) {
-            return res.status(500).json({ message: "Internal server error" });
-        }
-    }
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log("Error in logout controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
-// ✅ Update Profile
 export const updateProfile = async (req, res) => {
-    try {
-        const userId = req.user?.id; // Ensure authentication middleware sets `req.user`
-        if (!userId) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
+  try {
+    const { profilePic } = req.body;
+    const userId = req.user._id;
 
-        // Check if a file was uploaded
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
-        }
-
-        // ✅ Upload image buffer to Cloudinary
-        const uploadPromise = new Promise((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                { folder: "profile_pics" },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
-            );
-            // console.log("stream:",uploadStream);
-            uploadStream.end(req.file.buffer);
-        });
-
-        const uploadResult = await uploadPromise;
-        if (!uploadResult.secure_url) {
-            return res.status(500).json({ message: "Image upload failed" });
-        }
-
-        const profilePicUrl = uploadResult.secure_url;
-
-        // console.log("profilePicUrl:",profilePicUrl);
-
-        // ✅ Update user profile in the database
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { profilePic: profilePicUrl }, // Ensure correct field name
-            { new: true }
-        );
-
-        res.json({ 
-            _id: updatedUser._id,
-            fullName: updatedUser.fullName,
-            email: updatedUser.email,
-            profilePic: updatedUser.profilePic, // Ensure frontend gets the correct field
-            createdAt: updatedUser.createdAt 
-        });
-    } catch (error) {
-        console.error("Error in updateProfile controller:", error);
-        res.status(500).json({ message: "Internal server error" });
+    if (!profilePic) {
+      return res.status(400).json({ message: "Profile pic is required" });
     }
+
+    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: uploadResponse.secure_url },
+      { new: true }
+    );
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.log("error in update profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-
-// ✅ Check Auth
 export const checkAuth = (req, res) => {
-    try {
-        res.status(200).json(req.user);
-    } catch (error) {
-        console.error("Error in checkAuth controller", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Error in checkAuth controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
