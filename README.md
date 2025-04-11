@@ -1,42 +1,62 @@
-# ✨ Full Stack Realtime Chat App ✨
+# ✨ WrapChat - Full Stack Realtime Chat Application ✨
 
-![Demo App](/frontend/public/screenshot-for-readme.png)
+## 🚧 Currently Under Development 🚧
 
-[Video Tutorial on Youtube](https://youtu.be/ntKkVrQqBYY)
+**WrapChat** is a modern, feature-rich chat application built with security and seamless communication in mind.
 
-Highlights:
+---
 
-- 🌟 Tech stack: MERN + Socket.io + TailwindCSS + Daisy UI
-- 🎃 Authentication && Authorization with JWT
-- 👾 Real-time messaging with Socket.io
-- 🚀 Online user status
-- 👌 Global state management with Zustand
-- 🐞 Error handling both on the server and on the client
-- ⭐ At the end Deployment like a pro for FREE!
-- ⏳ And much more!
+## ✅ Key Features
 
-### Setup .env file
+- 🔐 Secure authentication with GitHub and Google OAuth  
+- 💬 Real-time messaging functionality  
+- 🟢 Online user status indicators  
+- 🌙 Light/Dark theme support  
+- 📱 Responsive design for all devices  
+- 🖼️ Image and file sharing capabilities  
+- 📝 Message read receipts  
 
-```js
-MONGODB_URI=...
-PORT=5001
-JWT_SECRET=...
+---
 
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
+## 🛠️ Tech Stack
 
+- **Frontend**: React.js, TailwindCSS, Daisy UI  
+- **Backend**: Node.js, Express.js  
+- **Database**: MongoDB  
+- **Real-time Communication**: Socket.io  
+- **State Management**: Zustand  
+- **Authentication**: JWT (JSON Web Tokens)  
+- **Cloud Storage**: Cloudinary  
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js  
+- MongoDB  
+- npm or yarn  
+
+---
+
+### Setup Environment Variables
+
+Create a `.env` file in the project root and add the following:
+
+MONGODB_URI=... 
+PORT=5001 JWT_SECRET=... 
+CLOUDINARY_CLOUD_NAME=... 
+CLOUDINARY_API_KEY=... 
+CLOUDINARY_API_SECRET=... 
 NODE_ENV=development
-```
 
-### Build the app
 
-```shell
-npm run build
-```
+---
 
-### Start the app
+## 📜 License
+This project is licensed under the MIT License – see the LICENSE file for details.
 
-```shell
-npm start
-```
+## 🤝 Contributing
+Contributions are welcome!
+Feel free to open issues or submit pull requests to help improve WrapChat
