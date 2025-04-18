@@ -59,4 +59,4 @@ This project is licensed under the MIT License – see the LICENSE file for deta
 
 ## 🤝 Contributing
 Contributions are welcome!
-Feel free to open issues or submit pull requests to help improve WrapChat
+Feel free to open issues or submit pull requests to help improve WrapChat.
